@@ -1,0 +1,171 @@
+<!-- <h2>Admin Dashboard</h2>
+<button onclick="junk()">Run Auto-Junk</button>
+<div id="claims"></div> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="./duetlogo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dawood University - Lost & Found Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./stylesub.css" />
+</head>
+<body>
+        <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon"><img src="./duetlogo.png" alt=""></span>
+                <span class="logo-text">Dawood University <p>of Engineering & Technology Karachi</p></span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="./index.html">Home</a></li>
+                <li><a href="./items.html">View Items</a></li>
+                <li><a href="./add-item.html">Add Item</a></li>
+                <li><a href="./login.html" class="cta-btn">Login</a></li>
+                <li><a href="./register.html" class="cta-btn">Signup</a></li>
+            </ul>
+            
+        </div>
+    </nav>
+<div class="hero-section">
+      <div class="hero-content">
+        <h1 class="fade-in">Lost & Found</h1>
+        <h1 class="fade-in">Admin Dashboard</h1>
+        <p class="subtitle fade-in-delay">Helping you reunite with your belongings.</p>
+        <p class="subtitle fade-in-delay">Manage Claims and Items Effectively.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="filter-section">
+            <div class="filter-header">
+                <h2><i class="fa-solid fa-shield-halved"></i> Claims Pending Approval</h2>
+                <button class="btn-reset" onclick="junk()"><i class="fa-solid fa-trash"></i> Auto-Junk Expired Items</button>
+            </div>
+        </div>
+
+        <!-- Claims Display -->
+        <div id="claims" class="items-grid">
+            <!-- Claims will be dynamically loaded here -->
+            <div id="itemBox">Loading claims...</div>
+        </div>
+    </div>
+
+
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <span class="logo-icon"></span>
+                        <span class="logo-text">Dawood University</span>
+                    </div>
+                    <p>Reconnecting campus communities, one item at a time.</p>
+                    <div class="social-links-footer">
+                        <a href="https://www.linkedin.com/school/dawood-university-of-engineering-and-technology/posts/?feedView=all" class="social-link">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                            </svg>
+                        </a>
+                        <a href="https://www.instagram.com/dawooduetkhi/?hl=en" class="social-link">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/>
+                            </svg>
+                        </a>
+                    <a href="https://www.facebook.com/dawooduetkhi/" class="social-link">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M22 12a10 10 0 1 0-11.5 9.9v-7h-2v-3h2v-2.3c0-2 1.2-3.1 3-3.1.9 0 1.8.2 1.8.2v2h-1c-1 0-1.3.6-1.3 1.2V12h2.3l-.4 3h-1.9v7A10 10 0 0 0 22 12"/>
+        </svg>
+    </a>
+
+    <!-- Twitter -->
+    <a href="https://x.com/DawoodUETKhi" class="social-link">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M22.46 6c-.77.34-1.6.56-2.46.66a4.27 4.27 0 0 0 1.88-2.36 8.52 8.52 0 0 1-2.7 1.03 4.24 4.24 0 0 0-7.22 3.86 12.04 12.04 0 0 1-8.74-4.44 4.24 4.24 0 0 0 1.31 5.66 4.22 4.22 0 0 1-1.92-.53v.05a4.25 4.25 0 0 0 3.39 4.16 4.23 4.23 0 0 1-1.91.07 4.25 4.25 0 0 0 3.96 2.95 8.51 8.51 0 0 1-5.27 1.81c-.34 0-.68-.02-1.02-.06a12.04 12.04 0 0 0 6.52 1.91c7.82 0 12.1-6.48 12.1-12.1 0-.18-.01-.36-.02-.54A8.64 8.64 0 0 0 24 4.56a8.48 8.48 0 0 1-2.54.7z"/>
+        </svg>
+    </a>                        
+
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Platform</h4>
+                    <a href="./add-item.html">Report Lost Item</a>
+                    <a href="./items.html">Browse Found Items</a>
+                    <a href="./claim.html">Claim what's yours</a>
+                    <a href="./admin.html">Faculty Login</a>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Support</h4>
+                    <a href="#">Help Center</a>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 | Dawood University | Lost and Found Management System | All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+
+
+
+
+
+
+
+<script>
+async function loadClaims() {
+    let res = await fetch("/admin/claims");
+    let claims = await res.json();
+
+    document.getElementById("claims").innerHTML =
+        claims.map(c => `
+            <div class='items card item-card'>
+                <div class="item-content">
+                    <h3>${c.item_id.item_name}</h3>
+                    <div class="items-details">
+                <div class="detail"><i class="fa-solid fa-user"></i> Claimed by: ${c.user_id.username}</div>
+                 <div class="detail"><i class="fa-solid fa-file-lines"></i> Proof: ${c.proof_text}</div>
+                <div class="detail"><img src="/uploads/${c.proof_image}" width="100" style="border-radius:10px;"></div>
+                </div>
+                <button class="btn-claim" onclick="app('${c._id}', '${c.item_id._id}')"><i class="fa-solid fa-check"></i> Approve</button>
+                <button class="btn-claim" style="background:#FF4444;" onclick="rej('${c._id}', '${c.item_id._id}')"><i class="fa-solid fa-xmark"></i> Reject</button>
+               </div>
+               </div>
+        `).join("");
+}
+loadClaims();
+
+async function app(cid, iid) {
+    await fetch("/admin/approve", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ claim_id: cid, item_id: iid })
+    });
+    loadClaims();
+}
+
+async function rej(cid, iid) {
+    await fetch("/admin/reject", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ claim_id: cid, item_id: iid })
+    });
+    loadClaims();
+}
+
+async function junk() {
+    await fetch("/auto-junk");
+    alert("Junked expired items!");
+}
+</script>
