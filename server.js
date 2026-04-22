@@ -254,6 +254,26 @@ app.get("/auto-junk", requireAdmin, async (req, res) => {
     }
 });
 
+// to check kisne login kiya hai
+// Who is logged in
+app.get("/me", async (req, res) => {
+    if (!req.session.user) return res.json({ loggedIn: false });
+    try {
+        const user = await User.findById(req.session.user.id, "username role");
+        if (!user) return res.json({ loggedIn: false });
+        res.json({ loggedIn: true, role: user.role, username: user.username });
+    } catch (err) {
+        res.json({ loggedIn: false });
+    }
+});
+
+// Logout
+app.post("/logout", (req, res) => {
+    req.session.destroy();
+    res.json({ success: true });
+});
+
+
 // ─── STATIC FILES ─────────────────────────────────────────────────────────────
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));

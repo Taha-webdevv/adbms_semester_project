@@ -1008,6 +1008,64 @@ h1, h2, h3, h4 {
     font-size: 0.9rem;
 }
 
+.filter-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--card-bg, #fff);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+}
+
+.search-box i {
+    opacity: 0.4;
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 0.95rem;
+}
+
+.filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filter-btn {
+    padding: 0.45rem 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(0,0,0,0.15);
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    border-color: var(--primary, #c9a84c);
+    color: var(--primary, #c9a84c);
+}
+
+.filter-btn.active {
+    background: var(--primary, #c9a84c);
+    border-color: var(--primary, #c9a84c);
+    color: #fff;
+    font-weight: 600;
+}
+
+
 @media (max-width: 1024px) {
     .nav-links {
         gap: 1.5rem;
