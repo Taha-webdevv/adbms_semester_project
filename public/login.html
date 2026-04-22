@@ -113,11 +113,6 @@
             </div>
         </div>
     </footer>
-</body>
-</html>
-
-
-
 
 
 <script>
@@ -128,8 +123,9 @@ document.getElementById("logForm").onsubmit = async (e) => {
     let password = e.target.password.value;
 
     let res = await fetch("/login", {
-        method:"POST",
-        headers: { "Content-Type":"application/json" },
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
     });
 
@@ -141,3 +137,5 @@ document.getElementById("logForm").onsubmit = async (e) => {
     else location.href = "items.html";
 };
 </script>
+</body>
+</html>

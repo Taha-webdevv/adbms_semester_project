@@ -114,42 +114,57 @@
             </div>
         </div>
     </footer>
-</body>
-</html>
-
-
-
-
 
 
 
 <script>
 async function loadClaims() {
-    let res = await fetch("/admin/claims");
-    let claims = await res.json();
+    try {
+        let res = await fetch("/admin/claims", {
+            credentials: "include"
+        });
 
-    document.getElementById("claims").innerHTML =
-        claims.map(c => `
+        console.log("Status:", res.status);
+        let data = await res.json();
+        console.log("Response:", data);
+
+        if (!Array.isArray(data)) {
+            document.getElementById("claims").innerHTML = `<p>Server said: ${JSON.stringify(data)}</p>`;
+            return;
+        }
+
+        if (data.length === 0) {
+            document.getElementById("claims").innerHTML = "<p>No pending claims right now.</p>";
+            return;
+        }
+
+        document.getElementById("claims").innerHTML = data.map(c => `
             <div class='items card item-card'>
                 <div class="item-content">
                     <h3>${c.item_id.item_name}</h3>
                     <div class="items-details">
-                <div class="detail"><i class="fa-solid fa-user"></i> Claimed by: ${c.user_id.username}</div>
-                 <div class="detail"><i class="fa-solid fa-file-lines"></i> Proof: ${c.proof_text}</div>
-                <div class="detail"><img src="/uploads/${c.proof_image}" width="100" style="border-radius:10px;"></div>
+                        <div class="detail"><i class="fa-solid fa-user"></i> Claimed by: ${c.user_id.username}</div>
+                        <div class="detail"><i class="fa-solid fa-file-lines"></i> Proof: ${c.proof_text}</div>
+                        <div class="detail"><img src="/uploads/${c.proof_image}" width="100" style="border-radius:10px;"></div>
+                    </div>
+                    <button class="btn-claim" onclick="app('${c._id}', '${c.item_id._id}')"><i class="fa-solid fa-check"></i> Approve</button>
+                    <button class="btn-claim" style="background:#FF4444;" onclick="rej('${c._id}', '${c.item_id._id}')"><i class="fa-solid fa-xmark"></i> Reject</button>
                 </div>
-                <button class="btn-claim" onclick="app('${c._id}', '${c.item_id._id}')"><i class="fa-solid fa-check"></i> Approve</button>
-                <button class="btn-claim" style="background:#FF4444;" onclick="rej('${c._id}', '${c.item_id._id}')"><i class="fa-solid fa-xmark"></i> Reject</button>
-               </div>
-               </div>
+            </div>
         `).join("");
+
+    } catch (err) {
+        console.error("loadClaims error:", err);
+        document.getElementById("claims").innerHTML = `<p>Error: ${err.message}</p>`;
+    }
 }
 loadClaims();
 
 async function app(cid, iid) {
     await fetch("/admin/approve", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ claim_id: cid, item_id: iid })
     });
     loadClaims();
@@ -157,15 +172,20 @@ async function app(cid, iid) {
 
 async function rej(cid, iid) {
     await fetch("/admin/reject", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ claim_id: cid, item_id: iid })
     });
     loadClaims();
 }
 
 async function junk() {
-    await fetch("/auto-junk");
+    await fetch("/auto-junk", {
+        credentials: "include"
+    });
     alert("Junked expired items!");
 }
 </script>
+</body>
+</html>

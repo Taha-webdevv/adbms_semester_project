@@ -1,16 +1,18 @@
 const express = require("express");
-// const mysql = require("mysql");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const multer = require("multer");
 const path = require("path");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors());
-
+app.use(cors());app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true
+}));
 
 app.use(
     session({
@@ -20,133 +22,89 @@ app.use(
     })
 );
 
-
-//connector
-// const db = mysql.createConnection({
-//     host: "localhost",
-//     user: "root",
-//     password: "1234",
-    // GodofwarragnarokNovember2022
-    //1234
-    
-//     database: "lostfound"
-// });
-
-// db.connect(err => {
-//     if (err) console.log(err);
-//     else console.log("MySQL Connected!");
-// });
-
-//connector
+// ─── DB CONNECTION ───────────────────────────────────────────────────────────
 mongoose.connect("mongodb://localhost:27017/lostfound")
-.then(() => console.log("MongoDB Connected!"))
-.catch(err => console.log(err));
+    .then(() => console.log("MongoDB Connected!"))
+    .catch(err => console.log(err));
 
-//Schema 
+// ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 const userSchema = new mongoose.Schema({
-    // id → MongoDB auto-creates _id
-    username: { type: String, required: true, unique: true },  // VARCHAR(50) UNIQUE NOT NULL
-    password: { type: String, required: true },                // VARCHAR(255) NOT NULL
-    role:     { type: String, enum: ["admin", "user"], default: "user" } // ENUM('admin','user')
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role:     { type: String, enum: ["admin", "user"], default: "user" }
 });
 const User = mongoose.model("User", userSchema);
- 
+
 const itemSchema = new mongoose.Schema({
-    // id → MongoDB auto-creates _id
-    user_id:        { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // FOREIGN KEY users(id)
-    item_name:      { type: String, required: true },                      // VARCHAR(100) NOT NULL
-    category:       { type: String, required: true, enum: ["phone", "laptop", "keys", "wallet_purse", "charger", "miscellaneous"] }, // ENUM
-    description:    { type: String },                                      // TEXT
-    location_found: { type: String },                                      // VARCHAR(255)
-    found_date:     { type: Date, default: Date.now },                     // DATETIME DEFAULT CURRENT_TIMESTAMP
-    status:         { type: String, enum: ["listed", "claimed", "returned", "junked"], default: "listed" } // ENUM
+    user_id:        { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    item_name:      { type: String, required: true },
+    category:       { type: String, required: true, enum: ["phone", "laptop", "keys", "wallet_purse", "charger", "miscellaneous"] },
+    description:    { type: String },
+    location_found: { type: String },
+    found_date:     { type: Date, default: Date.now },
+    status:         { type: String, enum: ["listed", "claimed", "returned", "junked"], default: "listed" }
 });
 const Item = mongoose.model("Item", itemSchema);
- 
+
 const claimSchema = new mongoose.Schema({
-    // id → MongoDB auto-creates _id
-    user_id:      { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // FOREIGN KEY users(id)
-    item_id:      { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true }, // FOREIGN KEY items(id)
-    proof_text:   { type: String },                                                      // TEXT
-    proof_image:  { type: String },                                                      // VARCHAR(255)
-    claim_date:   { type: Date, default: Date.now },                                     // DATETIME DEFAULT CURRENT_TIMESTAMP
-    admin_status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" } // ENUM
+    user_id:      { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    item_id:      { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true },
+    proof_text:   { type: String },
+    proof_image:  { type: String },
+    claim_date:   { type: Date, default: Date.now },
+    admin_status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" }
 });
 const Claim = mongoose.model("Claim", claimSchema);
 
-
-
-
-//image uploads Multer
+// ─── MULTER ──────────────────────────────────────────────────────────────────
 const storage = multer.diskStorage({
     destination: "uploads/",
     filename: (req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname));
     }
 });
-
 const upload = multer({ storage });
 
+// ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
+const requireLogin = (req, res, next) => {
+    if (!req.session.user) {
+        return res.status(401).json({ error: "Not logged in" });
+    }
+    next();
+};
 
-//register route
-// app.post("/register", (req, res) => {
-//     const { username, password } = req.body;
+const requireAdmin = (req, res, next) => {
+    if (!req.session.user || req.session.user.role !== "admin") {
+        return res.status(403).json({ error: "Access denied" });
+    }
+    next();
+};
 
-//     db.query(
-//         "INSERT INTO users (username, password) VALUES (?, ?)",
-//         [username, password],
-//         (err) => {
-//             if (err) return res.json({ error: err });
-//             res.json({ success: true });
-//         }
-//     );
-// });
-//register route
+// ─── ROUTES ───────────────────────────────────────────────────────────────────
+
+// Register
 app.post("/register", async (req, res) => {
     const { username, password } = req.body;
     try {
-        const user = new User({ username, password });
+        const hashed = await bcrypt.hash(password, 10);
+        const user = new User({ username, password: hashed });
         await user.save();
         res.json({ success: true });
     } catch (err) {
         res.json({ error: err.message });
     }
 });
- 
 
-
-
-// login route
-
-// app.post("/login", (req, res) => {
-//     const { username, password } = req.body;
-
-//     db.query(
-//         "SELECT * FROM users WHERE username=? AND password=?",
-//         [username, password],
-//         (err, result) => {
-//             if (err) return res.json({ error: err });
-//             if (result.length === 0)
-//                 return res.json({ success: false });
-
-//             req.session.user = {
-//                 id: result[0].id,
-//                 role: result[0].role
-//             };
-
-//             res.json({ success: true, role: result[0].role });
-//         }
-//     );
-// });
-
-// login route
-
+// Login
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
     try {
-        const user = await User.findOne({ username, password });
+        const user = await User.findOne({ username });
         if (!user) return res.json({ success: false });
- 
+
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) return res.json({ success: false });
+
         req.session.user = { id: user._id, role: user.role };
         res.json({ success: true, role: user.role });
     } catch (err) {
@@ -154,35 +112,21 @@ app.post("/login", async (req, res) => {
     }
 });
 
-
-// app.post("/add-item", (req, res) => {
-
-//     if (!req.session.user) {
-//         return res.json({ error: "Not logged in" });
-//     }
-
-//     const { item_name, category, description, location_found } = req.body;
-//     const user_id = req.session.user.id;
-
-//     db.query(
-//         `INSERT INTO items (user_id, item_name, category, description, location_found)
-//          VALUES (?, ?, ?, ?, ?)`,
-//         [user_id, item_name, category, description, location_found],
-//         (err) => {
-//             if (err) return res.json({ error: err });
-//             res.json({ success: true });
-//         }
-//     );
-// });
-//add item
-app.post("/add-item", async (req, res) => {
-    if (!req.session.user) return res.json({ error: "Not logged in" });
- 
+// Add Item
+app.post("/add-item", requireLogin, async (req, res) => {
     const { item_name, category, description, location_found } = req.body;
+
+    if (!item_name?.trim() || !category?.trim()) {
+        return res.json({ error: "Item name and category are required." });
+    }
+
     try {
         const item = new Item({
             user_id: req.session.user.id,
-            item_name, category, description, location_found
+            item_name: item_name.trim(),
+            category,
+            description: description?.trim(),
+            location_found: location_found?.trim()
         });
         await item.save();
         res.json({ success: true });
@@ -191,16 +135,7 @@ app.post("/add-item", async (req, res) => {
     }
 });
 
-
-// for available items
-
-// app.get("/items", (req, res) => {
-//     db.query("SELECT * FROM items WHERE status='listed'", (err, result) => {
-//         if (err) return res.json({ error: err });
-//         res.json(result);
-//     });
-// });
-// for available items
+// Get Listed Items
 app.get("/items", async (req, res) => {
     try {
         const items = await Item.find({ status: "listed" });
@@ -210,33 +145,30 @@ app.get("/items", async (req, res) => {
     }
 });
 
-
-        // claim form
-// app.post("/claim", upload.single("proof_image"), (req, res) => {
-//     const { item_id, proof_text } = req.body;
-//     const user_id = req.session.user.id;
-
-//     const file = req.file ? req.file.filename : null;
-
-//     db.query(
-//         `INSERT INTO claims (user_id, item_id, proof_text, proof_image)
-//          VALUES (?, ?, ?, ?)`,
-//         [user_id, item_id, proof_text, file],
-//         (err) => {
-//             if (err) return res.json({ error: err });
-//             db.query("UPDATE items SET status='claimed' WHERE id=?", [item_id]);
-//             res.json({ success: true });
-//         }
-//     );
-// });
-
-app.post("/claim", upload.single("proof_image"), async (req, res) => {
-    if (!req.session.user) return res.json({ error: "Not logged in" });
- 
+// Submit Claim
+app.post("/claim", requireLogin, upload.single("proof_image"), async (req, res) => {
     const { item_id, proof_text } = req.body;
     const proof_image = req.file ? req.file.filename : null;
- 
+
     try {
+        // Check if this user already has a claim for this item
+        const existing = await Claim.findOne({
+            user_id: req.session.user.id,
+            item_id
+        });
+        if (existing) return res.json({ error: "You have already submitted a claim for this item." });
+
+        // Atomically grab the item only if it's still listed
+        const item = await Item.findOneAndUpdate(
+            { _id: item_id, status: "listed" },
+            { status: "claimed" },
+            { new: true }
+        );
+
+        if (!item) {
+            return res.json({ error: "This item is no longer available." });
+        }
+
         const claim = new Claim({
             user_id: req.session.user.id,
             item_id,
@@ -244,84 +176,72 @@ app.post("/claim", upload.single("proof_image"), async (req, res) => {
             proof_image
         });
         await claim.save();
-        await Item.findByIdAndUpdate(item_id, { status: "claimed" });
         res.json({ success: true });
+
     } catch (err) {
         res.json({ error: err.message });
     }
 });
 
-//admin panel claims
-// app.get("/admin/claims", (req, res) => {
-//     db.query(
-//         `SELECT claims.*, items.item_name, users.username 
-//          FROM claims
-//          JOIN items ON claims.item_id = items.id
-//          JOIN users ON claims.user_id = users.id
-//          WHERE admin_status='pending'`,
-//         (err, result) => {
-//             if (err) return res.json({ error: err });
-//             res.json(result);
-//         }
-//     );
-// });
-app.get("/admin/claims", async (req, res) => {
+// Admin — Get Pending Claims
+app.get("/admin/claims", requireAdmin, async (req, res) => {
     try {
         const claims = await Claim.find({ admin_status: "pending" })
             .populate("item_id", "item_name")
             .populate("user_id", "username");
-        res.json(claims);
+
+        // Filter out any claims where user or item was deleted
+        const validClaims = claims.filter(c => c.user_id && c.item_id);
+
+        res.json(validClaims);
     } catch (err) {
         res.json({ error: err.message });
     }
 });
-
-
-
-
-// app.post("/admin/approve", (req, res) => {
-//     const { claim_id, item_id } = req.body;
-
-//     db.query("UPDATE claims SET admin_status='approved' WHERE id=?", [claim_id]);
-//     db.query("UPDATE items SET status='returned' WHERE id=?", [item_id]);
-
-//     res.json({ success: true });
-// });
-app.post("/admin/approve", async (req, res) => {
+// Admin — Approve Claim
+app.post("/admin/approve", requireAdmin, async (req, res) => {
     const { claim_id, item_id } = req.body;
     try {
         await Claim.findByIdAndUpdate(claim_id, { admin_status: "approved" });
         await Item.findByIdAndUpdate(item_id, { status: "returned" });
+
+        // Reject all other pending claims for the same item
+        await Claim.updateMany(
+            { item_id, _id: { $ne: claim_id }, admin_status: "pending" },
+            { admin_status: "rejected" }
+        );
+
         res.json({ success: true });
     } catch (err) {
         res.json({ error: err.message });
     }
 });
 
-
-// app.post("/admin/reject", (req, res) => {
-//     const { claim_id, item_id } = req.body;
-
-//     db.query("UPDATE claims SET admin_status='rejected' WHERE id=?", [claim_id]);
-//     db.query("UPDATE items SET status='listed' WHERE id=?", [item_id]);
-
-//     res.json({ success: true });
-// });
-app.post("/admin/reject", async (req, res) => {
+// Admin — Reject Claim
+app.post("/admin/reject", requireAdmin, async (req, res) => {
     const { claim_id, item_id } = req.body;
     try {
         await Claim.findByIdAndUpdate(claim_id, { admin_status: "rejected" });
-        await Item.findByIdAndUpdate(item_id, { status: "listed" });
+
+        // Only re-list the item if no other pending claims exist
+        const otherPending = await Claim.findOne({
+            item_id,
+            _id: { $ne: claim_id },
+            admin_status: "pending"
+        });
+
+        if (!otherPending) {
+            await Item.findByIdAndUpdate(item_id, { status: "listed" });
+        }
+
         res.json({ success: true });
     } catch (err) {
         res.json({ error: err.message });
     }
 });
- 
 
-
-//send to junk
-app.get("/auto-junk", async (req, res) => {
+// Auto Junk — marks old miscellaneous items as junked
+app.get("/auto-junk", requireAdmin, async (req, res) => {
     const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
     try {
         const result = await Item.updateMany(
@@ -333,9 +253,9 @@ app.get("/auto-junk", async (req, res) => {
         res.json({ error: err.message });
     }
 });
- 
-// Static files
+
+// ─── STATIC FILES ─────────────────────────────────────────────────────────────
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
- 
+
 app.listen(3000, () => console.log("Server running on port 3000"));

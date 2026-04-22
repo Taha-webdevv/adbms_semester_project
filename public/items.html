@@ -107,42 +107,44 @@
             </div>
         </div>
     </footer>
-</body>
-</html>
+
 
 <script>
 async function loadItems() {
-    let res = await fetch("/items");
+    let res = await fetch("/items", {
+        credentials: "include"
+    });
     let items = await res.json();
 
     let cont = document.getElementById("items");
     cont.innerHTML = "";
 
+    if (items.length === 0) {
+        cont.innerHTML = "<p>No items found.</p>";
+        return;
+    }
+
     items.forEach(item => {
         cont.innerHTML += `
-            <div  class="item-card">
+            <div class="item-card">
                 <div class="item-content">
-            <span class="item-category">${item.category}</span>
-                <h3>${item.item_name}</h3>
-                <p class="items-description">${item.description}</p>
-
-
-                <div class="items-details">
-                <div class="detail">
-                    <i class="fas fa-map-marker-alt"></i>
-                    Found at: ${item.location_found}
+                    <span class="item-category">${item.category}</span>
+                    <h3>${item.item_name}</h3>
+                    <p class="items-description">${item.description}</p>
+                    <div class="items-details">
+                        <div class="detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Found at: ${item.location_found}
+                        </div>
+                    </div>
+                    <button class="btn-claim" onclick="claim('${item._id}')">
+                        Claim Item
+                    </button>
                 </div>
             </div>
-
-               <button class="btn-claim" onclick="claim('${item._id}')">
-                Claim Item
-            </button>
-            </div>
-             </div>
         `;
     });
 }
-// style="border:1px solid #ccc; margin:10px; padding:10px;"
 
 function claim(id) {
     window.location.href = "/claim.html?item_id=" + id;
@@ -151,6 +153,8 @@ function claim(id) {
 loadItems();
 </script>
 
+</body>
+</html>
 
 <!-- <script>
 async function loadItems() {

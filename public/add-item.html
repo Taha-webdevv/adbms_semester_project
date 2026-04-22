@@ -171,14 +171,6 @@
             </div>
         </div>
     </footer>
-</body>
-</html>
-
-
-
-
-
-
 
 
 
@@ -197,10 +189,20 @@ document.getElementById("addForm").onsubmit = async (e) => {
 
     let res = await fetch("/add-item", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
     });
 
-    alert("Item Added!");
+    let result = await res.json();
+
+    if (result.error) {
+        alert("Error: " + result.error);
+    } else {
+        alert("Item Added Successfully!");
+        location.href = "items.html";
+    }
 };
 </script>
+</body>
+</html>

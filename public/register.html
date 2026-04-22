@@ -117,9 +117,6 @@
             </div>
         </div>
     </footer>
-</body>
-</html>
-
 
 
 
@@ -132,13 +129,20 @@ document.getElementById("regForm").onsubmit = async (e) => {
     let password = e.target.password.value;
 
     let res = await fetch("/register", {
-        method:"POST",
+        method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
     });
 
     let data = await res.json();
-    if (data.success) alert("Registered!");
-    else alert("Error: " + JSON.stringify(data.error));
+    if (data.success) {
+        alert("Registered! Please login.");
+        location.href = "login.html";
+    } else {
+        alert("Error: " + JSON.stringify(data.error));
+    }
 };
 </script>
+</body>
+</html>
