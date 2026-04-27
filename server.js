@@ -34,6 +34,7 @@ mongoose
 // ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
+  email: { type: String },
   password: { type: String, required: true },
   role: { type: String, enum: ["admin", "user"], default: "user" },
 });
@@ -124,14 +125,40 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
+const nodemailer = require("nodemailer");
+require("dotenv").config();
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+async function sendNotification(to, subject, html) {
+  try {
+    await transporter.sendMail({
+      from: `"Lost & Found" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error("Email error:", err.message);
+  }
+}
+
+
 // ─── ROUTES ───────────────────────────────────────────────────────────────────
 
 // Register
 app.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, email } = req.body;
   try {
     const hashed = await bcrypt.hash(password, 10);
-    const user = new User({ username, password: hashed });
+    const user = new User({ username, email, password: hashed });
+
     await user.save();
     res.json({ success: true });
   } catch (err) {
@@ -225,6 +252,18 @@ app.post(
         proof_image,
       });
       await claim.save();
+
+      const claimUser = await User.findById(req.session.user.id, "username email");
+      if (claimUser?.email) {
+        await sendNotification(
+          claimUser.email,
+          "📩 Claim Submitted Successfully",
+          `<h2>Hi ${claimUser.username},</h2>
+           <p>Your claim for <strong>${item.item_name}</strong> has been submitted and is under review.</p>
+           <p>You will be notified once the admin reviews it.</p>`
+        );
+      }
+
       res.json({ success: true });
     } catch (err) {
       res.json({ error: err.message });
@@ -290,6 +329,20 @@ app.post("/admin/approve", requireAdmin, async (req, res) => {
       { admin_status: "rejected" },
     );
 
+    const approvedClaim = await Claim.findById(claim_id)
+      .populate("user_id", "username email")
+      .populate("item_id", "item_name");
+
+    if (approvedClaim?.user_id?.email) {
+      await sendNotification(
+        approvedClaim.user_id.email,
+        " Your Claim Was Approved!",
+        `<h2>Hi ${approvedClaim.user_id.username}!</h2>
+         <p>Your claim for <strong>${approvedClaim.item_id.item_name}</strong> has been <span style="color:green"><b>approved</b></span>.</p>
+         <p>Please visit the Lost & Found office to collect your item.</p>`
+      );
+    }
+
     res.json({ success: true });
   } catch (err) {
     res.json({ error: err.message });
@@ -310,6 +363,20 @@ app.post("/admin/reject", requireAdmin, async (req, res) => {
 
     if (!otherPending) {
       await Item.findByIdAndUpdate(item_id, { status: "listed" });
+    }
+
+   const rejectedClaim = await Claim.findById(claim_id)
+      .populate("user_id", "username email")
+      .populate("item_id", "item_name");
+
+    if (rejectedClaim?.user_id?.email) {
+      await sendNotification(
+        rejectedClaim.user_id.email,
+        "Your Claim Was Rejected",
+        `<h2>Hi ${rejectedClaim.user_id.username},</h2>
+         <p>Your claim for <strong>${rejectedClaim.item_id.item_name}</strong> has been <span style="color:red"><b>rejected</b></span>.</p>
+         <p>If you think this is a mistake, please contact the admin.</p>`
+      );
     }
 
     res.json({ success: true });
