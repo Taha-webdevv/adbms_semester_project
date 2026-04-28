@@ -170,6 +170,7 @@ function renderItems(items) {
     items.forEach(item => {
         cont.innerHTML += `
             <div class="item-card">
+                ${item.item_image ? `<img src="/uploads/${item.item_image}" alt="${item.item_name}" class="item-image">` : `<div class="item-image-placeholder"><i class="fas fa-image"></i></div>`}
                 <div class="item-content">
                     <span class="item-category">${item.category}</span>
                     <h3>${item.item_name}</h3>

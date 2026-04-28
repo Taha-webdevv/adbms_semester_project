@@ -9,13 +9,12 @@ const bcrypt = require("bcrypt");
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors());
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-  }),
-);
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true,
+}));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use(
   session({
@@ -58,6 +57,7 @@ const itemSchema = new mongoose.Schema({
   description: { type: String },
   location_found: { type: String },
   found_date: { type: Date, default: Date.now },
+  item_image: { type: String, default: null },
   status: {
     type: String,
     enum: ["listed", "claimed", "returned", "junked"],
@@ -103,7 +103,9 @@ const Complaint = mongoose.model("Complaint", complaintSchema, "complaint");
 
 // ─── MULTER ──────────────────────────────────────────────────────────────────
 const storage = multer.diskStorage({
-  destination: "uploads/",
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "uploads"));
+  },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
   },
@@ -184,8 +186,18 @@ app.post("/login", async (req, res) => {
 });
 
 // Add Item
-app.post("/add-item", requireLogin, async (req, res) => {
+// Add Item
+app.post("/add-item", requireLogin, (req, res, next) => {
+  upload.single("item_image")(req, res, (err) => {
+    if (err) {
+      console.error("MULTER ERROR:", err);
+      return res.json({ error: "File upload failed: " + err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
   const { item_name, category, description, location_found } = req.body;
+  const item_image = req.file ? req.file.filename : null;
 
   if (!item_name?.trim() || !category?.trim()) {
     return res.json({ error: "Item name and category are required." });
@@ -198,6 +210,7 @@ app.post("/add-item", requireLogin, async (req, res) => {
       category,
       description: description?.trim(),
       location_found: location_found?.trim(),
+      item_image,
     });
     await item.save();
     res.json({ success: true });
